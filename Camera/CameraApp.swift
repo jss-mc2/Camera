@@ -38,11 +38,11 @@ struct ButtonHighlight: View {
 
 @main
 struct CameraApp: App {
-    @State private var isCameraOpen = false
+    @State var isCameraOpen = false
     
     var body: some Scene {
         WindowGroup {
-            if !isCameraOpen {
+            VStack {
                 Text("In-app will ask permissions for Camera and Photo Library access")
                 ButtonHighlight(
                     action: { isCameraOpen = true },
@@ -80,8 +80,8 @@ struct CameraApp: App {
                     },
                     label: "Open the Photos app (not a public URL scheme and may cause rejection from App Store)"
                 )
-            } else {
-                CameraView()
+            }.sheet(isPresented: $isCameraOpen) {
+                CameraView(isCameraOpen: $isCameraOpen)
             }
         }
     }

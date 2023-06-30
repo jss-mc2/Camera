@@ -5,7 +5,12 @@ See the License.txt file for this sample’s licensing information.
 import SwiftUI
 
 struct CameraView: View {
-    @StateObject private var model = CameraViewModel()
+    @Binding private var isCameraOpen: Bool
+    @StateObject private var cameraViewModel: CameraViewModel = CameraViewModel()
+    
+    init(isCameraOpen: Binding<Bool>) {
+        self._isCameraOpen = isCameraOpen
+    }
  
     private static let barHeightFactor = 0.15
     
@@ -13,11 +18,20 @@ struct CameraView: View {
         
         NavigationStack {
             GeometryReader { geometry in
-                ViewfinderView(image: $model.viewfinderImage )
+                ViewfinderView(image: $cameraViewModel.viewfinderImage )
                     .overlay(alignment: .top) {
-                        Color.black
-                            .opacity(0.75)
-                            .frame(height: geometry.size.height * Self.barHeightFactor)
+//                        Color.black
+//                            .opacity(0.75)
+//                            .frame(height: geometry.size.height * Self.barHeightFactor)
+                        Button(action: {
+                            isCameraOpen = false
+                        }) {
+                            Image(systemName: "xmark")
+                                .font(.title)
+                                .foregroundColor(.blue)
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .trailing)
                     }
                     .overlay(alignment: .bottom) {
                         buttonsView()
@@ -34,9 +48,9 @@ struct CameraView: View {
                     .background(.black)
             }
             .task {
-                await model.camera.start()
-                await model.loadPhotos()
-                await model.loadThumbnail()
+                await cameraViewModel.camera.start()
+                await cameraViewModel.loadPhotos()
+                await cameraViewModel.loadThumbnail()
             }
             .navigationTitle("Camera")
             .navigationBarTitleDisplayMode(.inline)
@@ -52,23 +66,23 @@ struct CameraView: View {
             Spacer()
             
             NavigationLink {
-                PhotoCollectionView(photoCollection: model.photoCollection)
+                PhotoCollectionView(photoCollection: cameraViewModel.photoCollection)
                     .onAppear {
-                        model.camera.isPreviewPaused = true
+                        cameraViewModel.camera.isPreviewPaused = true
                     }
                     .onDisappear {
-                        model.camera.isPreviewPaused = false
+                        cameraViewModel.camera.isPreviewPaused = false
                     }
             } label: {
                 Label {
                     Text("Gallery")
                 } icon: {
-                    ThumbnailView(image: model.thumbnailImage)
+                    ThumbnailView(image: cameraViewModel.thumbnailImage)
                 }
             }
             
             Button {
-                model.camera.takePhoto()
+                cameraViewModel.camera.takePhoto()
             } label: {
                 Label {
                     Text("Take Photo")
@@ -85,7 +99,7 @@ struct CameraView: View {
             }
             
             Button {
-                model.camera.switchCaptureDevice()
+                cameraViewModel.camera.switchCaptureDevice()
             } label: {
                 Label("Switch Camera", systemImage: "arrow.triangle.2.circlepath")
                     .font(.system(size: 36, weight: .bold))
